@@ -1,5 +1,7 @@
 # Healthway Diagnostics - Neural Retina Analysis
 
+**Live Demo:** [https://retina-25s2.vercel.app](https://retina-25s2.vercel.app)
+
 Healthway Diagnostics is a professional-grade clinical platform that leverages deep learning to detect Diabetic Retinopathy (DR) from fundus photography (retina scans). Using an **EfficientNet-B0** neural engine, it provides instant diagnostic classification and visual "heatmaps" (Grad-CAM) to assist medical professionals.
 
 ---
