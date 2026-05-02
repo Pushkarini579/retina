@@ -55,20 +55,15 @@ app.post('/api/analyze', upload.single('file'), async (req, res) => {
         formData.append('file', fs.createReadStream(req.file.path));
 
         console.log(`STEP 2: Forwarding to Python AI Service at ${AI_SERVICE_URL}...`);
-        const aiResponse = await fetch(`${AI_SERVICE_URL}/analyze`, {
-            method: 'POST',
-            body: formData
+        const aiResponse = await axios.post(`${AI_SERVICE_URL}/analyze`, formData, {
+            headers: {
+                ...formData.getHeaders()
+            }
         });
 
         console.log("STEP 3: AI response status =", aiResponse.status);
 
-        if (!aiResponse.ok) {
-            const errorText = await aiResponse.text();
-            console.error("STEP 3.1: AI Service Error Details =", errorText);
-            throw new Error(`AI Service responded with ${aiResponse.status}: ${errorText}`);
-        }
-
-        const result = await aiResponse.json();
+        const result = aiResponse.data;
         console.log("STEP 4: AI result =", JSON.stringify(result, null, 2));
 
         // Save to MongoDB
