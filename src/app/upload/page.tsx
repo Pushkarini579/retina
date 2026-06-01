@@ -1,28 +1,68 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import Swal from "sweetalert2";
 
+const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/dicom", "application/dicom"];
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+const uploadSchema = z.object({
+  patientName: z
+    .string()
+    .min(2, "Patient name must be at least 2 characters.")
+    .max(100, "Patient name must be fewer than 100 characters.")
+    .regex(/^[a-zA-Z\s'-]+$/, "Name may only contain letters, spaces, hyphens, and apostrophes."),
+  scanFile: z
+    .custom<FileList>()
+    .refine((files) => files && files.length > 0, "A retina scan file is required.")
+    .refine((files) => files && files[0] && files[0].size <= MAX_FILE_SIZE, "File must be 10 MB or smaller.")
+    .refine((files) => files && files[0] && ACCEPTED_TYPES.includes(files[0].type), "Only .JPG, .PNG, or .DICOM files are accepted."),
+});
+
+type UploadFormValues = z.infer<typeof uploadSchema>;
+
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return (
+    <p role="alert" className="flex items-center gap-1.5 text-xs font-bold text-red-500 mt-1.5 ml-1">
+      <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+      </svg>
+      {message}
+    </p>
+  );
+}
+
 export default function UploadPage() {
-  const [file, setFile] = useState<File | null>(null);
-  const [patientName, setPatientName] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
-  const setSelectedFile = (selectedFile: File) => {
-    setFile(selectedFile);
-    setPreview(URL.createObjectURL(selectedFile));
-  };
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<UploadFormValues>({
+    resolver: zodResolver(uploadSchema),
+  });
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
-    }
-  };
+  const watchedFiles = watch("scanFile");
+  const file = watchedFiles?.[0] ?? null;
+
+  const setSelectedFile = useCallback((selectedFile: File) => {
+    const dt = new DataTransfer();
+    dt.items.add(selectedFile);
+    setValue("scanFile", dt.files, { shouldValidate: true });
+    setPreview(URL.createObjectURL(selectedFile));
+  }, [setValue]);
+
 
   const onDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -53,22 +93,17 @@ export default function UploadPage() {
   };
 
   const clearFile = () => {
-    setFile(null);
+    setValue("scanFile", new DataTransfer().files, { shouldValidate: false });
     setPreview(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!file) return;
-
-    setUploading(true);
-
+  const onSubmit = async (data: UploadFormValues) => {
     const formData = new FormData();
-    formData.append("file", file);
-    formData.append("patientName", patientName || "Anonymous");
+    formData.append("file", data.scanFile[0]);
+    formData.append("patientName", data.patientName);
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
@@ -107,8 +142,6 @@ export default function UploadPage() {
         text: "Could not connect to the clinical server.",
         icon: "warning"
       });
-    } finally {
-      setUploading(false);
     }
   };
 
@@ -125,7 +158,7 @@ export default function UploadPage() {
 
         <div className="clinical-card p-2 group">
           <div className="bg-white rounded-[12px] p-12 transition-all">
-            <form onSubmit={handleSubmit} className="space-y-10">
+            <form onSubmit={handleSubmit(onSubmit)} noValidate method="post" className="space-y-10">
               <div className="space-y-3">
                  <label htmlFor="patient-name" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">
                     Patient Full Name
@@ -133,12 +166,16 @@ export default function UploadPage() {
                  <input
                     id="patient-name"
                     type="text"
-                    required
                     placeholder="Enter full name for the report"
-                    value={patientName}
-                    onChange={(e) => setPatientName(e.target.value)}
-                    className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:outline-none focus:border-accent-primary/30 focus:bg-white transition-all text-slate-800 font-bold placeholder:text-slate-300 shadow-inner"
+                    aria-invalid={!!errors.patientName}
+                    {...register("patientName")}
+                    className={`w-full px-6 py-4 bg-slate-50 border-2 rounded-2xl focus:outline-none focus:bg-white transition-all text-slate-800 font-bold placeholder:text-slate-300 shadow-inner ${
+                      errors.patientName
+                        ? "border-red-300 focus:border-red-400"
+                        : "border-slate-100 focus:border-accent-primary/30"
+                    }`}
                  />
+                 <FieldError message={errors.patientName?.message} />
               </div>
 
               <div
@@ -148,13 +185,25 @@ export default function UploadPage() {
                 className="relative"
               >
                 <input
-                  ref={fileInputRef}
                   type="file"
                   accept=".jpg,.jpeg,.png,.dicom"
-                  onChange={handleFileChange}
-                  className="sr-only"
                   id="file-upload"
-                  aria-describedby="file-upload-help file-upload-status"
+                  className="sr-only"
+                  aria-invalid={!!errors.scanFile}
+                  {...(() => {
+                    const { ref, ...rest } = register("scanFile", {
+                      onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+                        if (e.target.files?.[0]) setSelectedFile(e.target.files[0]);
+                      },
+                    });
+                    return {
+                      ...rest,
+                      ref: (e: HTMLInputElement | null) => {
+                        ref(e);
+                        fileInputRef.current = e;
+                      },
+                    };
+                  })()}
                 />
                 <div
                   role="button"
@@ -197,6 +246,7 @@ export default function UploadPage() {
                     </div>
                   )}
                 </div>
+                <FieldError message={errors.scanFile?.message as string | undefined} />
                 <p id="file-upload-status" className="sr-only" aria-live="polite">
                   {file ? `${file.name} selected for analysis.` : "No retina scan selected."}
                 </p>
@@ -214,11 +264,11 @@ export default function UploadPage() {
 
               <button
                 type="submit"
-                disabled={!file || uploading}
+                disabled={isSubmitting}
                 className="clinical-btn w-full !py-6 text-xl shadow-xl shadow-accent-primary/20"
-                aria-label={uploading ? "Analysis upload in progress" : "Execute retina scan analysis"}
+                aria-label={isSubmitting ? "Analysis upload in progress" : "Execute retina scan analysis"}
               >
-                {uploading ? (
+                {isSubmitting ? (
                   <span className="flex items-center justify-center gap-4">
                     <svg className="animate-spin h-7 w-7 text-white" viewBox="0 0 24 24" aria-hidden="true">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
