@@ -15,6 +15,14 @@ interface Record {
 export default function HistoryPage() {
   const [records, setRecords] = useState<Record[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [diagnosisFilter, setDiagnosisFilter] = useState("All");
+
+  const filteredRecords = records.filter((record) => {
+    const matchesSearch = record.filename.toLowerCase().includes(search.toLowerCase());
+    const matchesDiagnosis = diagnosisFilter === "All" || record.diagnosis === diagnosisFilter;
+    return matchesSearch && matchesDiagnosis;
+  });
 
   useEffect(() => {
     async function fetchHistory() {
@@ -47,6 +55,25 @@ export default function HistoryPage() {
           </Link>
         </div>
 
+        <div className="flex flex-col sm:flex-row gap-4">
+          <input
+            type="text"
+            placeholder="Search by filename..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full sm:w-80 px-4 py-2.5 bg-white border-2 border-slate-100 rounded-xl focus:outline-none focus:border-accent-primary/30 text-slate-800 font-bold placeholder:text-slate-300 text-sm"
+          />
+          <select
+            value={diagnosisFilter}
+            onChange={(e) => setDiagnosisFilter(e.target.value)}
+            className="px-4 py-2.5 bg-white border-2 border-slate-100 rounded-xl focus:outline-none focus:border-accent-primary/30 text-slate-800 font-bold text-sm"
+          >
+            <option value="All">All Diagnoses</option>
+            <option value="Healthy">Healthy</option>
+            <option value="Diabetic Retinopathy">Diabetic Retinopathy</option>
+          </select>
+        </div>
+
         <div className="clinical-card overflow-hidden">
           {loading ? (
             <div className="p-20 text-center text-slate-400 font-bold">
@@ -56,6 +83,10 @@ export default function HistoryPage() {
             <div className="p-20 text-center space-y-6">
                <p className="text-slate-400 font-medium text-lg">No records found in the database.</p>
                <Link href="/upload" className="clinical-link">Perform your first scan →</Link>
+            </div>
+          ) : filteredRecords.length === 0 ? (
+            <div className="p-20 text-center">
+              <p className="text-slate-400 font-medium text-lg">No records match your search.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -70,7 +101,7 @@ export default function HistoryPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50 bg-white">
-                  {records.map((record) => (
+                  {filteredRecords.map((record) => (
                     <tr key={record._id} className="hover:bg-slate-50/50 transition-colors group">
                       <td className="px-8 py-6 text-sm font-bold text-slate-500">
                         {new Date(record.createdAt).toLocaleString()}
