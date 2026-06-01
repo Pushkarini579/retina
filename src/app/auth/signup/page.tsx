@@ -9,10 +9,22 @@ export default function SignupPage() {
   const [formData, setFormData] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setPasswordError("");
+
+    if (formData.password.length < 8) {
+      setPasswordError("Password must be at least 8 characters.");
+      return;
+    }
+    if (!/\d/.test(formData.password)) {
+      setPasswordError("Password must contain at least one number.");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -72,11 +84,23 @@ export default function SignupPage() {
                   id={`signup-${field.key}`}
                   type={field.type}
                   required
-                  className="relative block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 focus:z-10 focus:border-green-500 focus:outline-none focus:ring-green-500 sm:text-sm"
+                  className={`relative block w-full rounded-lg border bg-white px-3 py-2 text-gray-900 placeholder-gray-400 focus:z-10 focus:outline-none sm:text-sm ${
+                    field.key === "password" && passwordError
+                      ? "border-red-400 focus:border-red-500 focus:ring-red-500"
+                      : "border-gray-300 focus:border-green-500 focus:ring-green-500"
+                  }`}
                   placeholder={field.placeholder}
                   value={field.value}
                   onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
                 />
+                {field.key === "password" && passwordError && (
+                  <p className="mt-1.5 flex items-center gap-1.5 text-xs font-bold text-red-500">
+                    <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    {passwordError}
+                  </p>
+                )}
               </div>
             ))}
           </div>
