@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 interface AnalysisResult {
   _id?: string;
@@ -15,15 +16,118 @@ interface AnalysisResult {
   heatmap?: string;
 }
 
-export default function ResultPage() {
-  const [result] = useState<AnalysisResult | null>(() => {
-    if (typeof window === "undefined") {
-      return null;
-    }
+function ResultSkeleton() {
+  return (
+    <div className="max-w-6xl mx-auto space-y-10">
+      {/* Report Header */}
+      <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="space-y-3">
+          <Skeleton className="h-10 w-64" />
+          <Skeleton className="h-4 w-48" />
+        </div>
+        <div className="flex gap-4">
+          <Skeleton className="h-12 w-36 rounded-xl" />
+          <Skeleton className="h-12 w-36 rounded-xl" />
+        </div>
+      </div>
+ 
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
+        {/* Main card — lg:col-span-3 */}
+        <div className="lg:col-span-3 clinical-card p-1">
+          <div className="bg-white rounded-[12px] p-10 space-y-12">
+ 
+            {/* Diagnosis status + right panel */}
+            <div className="flex flex-col md:flex-row justify-between items-start gap-12">
+              {/* Left: diagnosis title + confidence bar */}
+              <div className="space-y-4 flex-1">
+                <Skeleton className="h-3 w-32" />        {/* "Diagnosis Status" label */}
+                <Skeleton className="h-14 w-48" />       {/* Big diagnosis word */}
+                <div className="pt-6 space-y-3">
+                  <div className="flex justify-between">
+                    <Skeleton className="h-3 w-32" />
+                    <Skeleton className="h-3 w-10" />
+                  </div>
+                  <Skeleton className="h-3 w-full rounded-full" /> {/* confidence bar */}
+                </div>
+              </div>
+ 
+              {/* Right: severity card + scan preview */}
+              <div className="w-full md:w-72 grid grid-cols-1 gap-6">
+                <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-2">
+                  <Skeleton className="h-3 w-28" />
+                  <Skeleton className="h-9 w-16" />
+                </div>
+                <Skeleton className="h-40 w-full rounded-2xl" /> {/* scan preview */}
+              </div>
+            </div>
+ 
+            {/* Technical Observations */}
+            <div className="border-t border-slate-50 pt-10 space-y-8">
+              <Skeleton className="h-6 w-52" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                {/* Observation rows */}
+                <div className="space-y-6">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="flex justify-between items-center py-4 border-b border-slate-50">
+                      <Skeleton className="h-3 w-28" />
+                      <Skeleton className="h-3 w-20" />
+                    </div>
+                  ))}
+                </div>
+                {/* Heatmap placeholder */}
+                <Skeleton className="h-64 w-full rounded-3xl" />
+              </div>
+            </div>
+ 
+            {/* Explanation section */}
+            <div className="border-t border-slate-50 pt-10 space-y-6">
+              <Skeleton className="h-6 w-64" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {Array.from({ length: 2 }).map((_, i) => (
+                  <div key={i} className="p-5 rounded-2xl bg-slate-50 border border-slate-100 space-y-3">
+                    <Skeleton className="h-4 w-36" />
+                    <Skeleton className="h-3 w-full" />
+                    <Skeleton className="h-3 w-5/6" />
+                    <Skeleton className="h-3 w-4/6" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+ 
+        {/* Recommendations sidebar — lg:col-span-1 */}
+        <div className="lg:col-span-1 clinical-card p-1">
+          <div className="bg-slate-900 rounded-[12px] p-8 space-y-10">
+            <Skeleton className="h-14 w-14 rounded-2xl bg-slate-700" />
+            <div className="space-y-3">
+              <Skeleton className="h-6 w-40 bg-slate-700" />
+              <Skeleton className="h-3 w-full bg-slate-700" />
+              <Skeleton className="h-3 w-5/6 bg-slate-700" />
+            </div>
+            <div className="space-y-4 pt-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex items-start gap-4">
+                  <Skeleton className="h-2 w-2 mt-1.5 rounded-full bg-slate-700 shrink-0" />
+                  <Skeleton className="h-3 w-full bg-slate-700" />
+                </div>
+              ))}
+            </div>
+            <Skeleton className="h-12 w-full rounded-xl bg-slate-700 mt-8" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-    const data = sessionStorage.getItem("lastAnalysis");
-    return data ? JSON.parse(data) : null;
-  });
+export default function ResultPage() {
+  const [result, setResult] = useState<AnalysisResult | null>(null);
+
+useEffect(() => {
+  const data = sessionStorage.getItem("lastAnalysis");
+  setResult(data ? JSON.parse(data) : null);
+}, []);
 
   const handleExportPDF = () => {
     if (result?._id) {
@@ -35,8 +139,7 @@ export default function ResultPage() {
   if (!result) {
     return (
       <main className="flex-grow flex flex-col items-center justify-center p-6">
-        <p className="text-slate-500 font-bold">Loading analysis results...</p>
-        <Link href="/upload" className="mt-4 clinical-link">Go back to upload</Link>
+        <ResultSkeleton />
       </main>
     );
   }

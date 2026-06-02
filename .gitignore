@@ -8,6 +8,7 @@ backend/__pycache__/
 *.csv
 *.db
 .env
+.env.local
 .vscode/
 *.log
 server/uploads/*

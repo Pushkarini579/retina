@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Skeleton } from "@/components/ui/Skeleton";
 import Link from "next/link";
 
 interface Record {
@@ -10,6 +11,53 @@ interface Record {
   diagnosis: string;
   confidence: number;
   riskLevel: string;
+}
+
+function HistoryTableSkeleton() {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-left border-collapse">
+        <thead>
+          <tr className="bg-slate-50 border-b border-slate-100">
+            {["Date & Time", "File Reference", "Diagnosis", "Confidence", "Action"].map((col) => (
+              <th key={col} className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                {col}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-50 bg-white">
+          {Array.from({ length: 7 }).map((_, i) => (
+            <tr key={i}>
+              {/* Date & Time */}
+              <td className="px-8 py-6">
+                <Skeleton className="h-3.5 w-36" />
+              </td>
+              {/* File Reference */}
+              <td className="px-8 py-6">
+                <Skeleton className="h-3.5 w-44" />
+              </td>
+              {/* Diagnosis badge */}
+              <td className="px-8 py-6">
+                <Skeleton className="h-6 w-20 rounded-full" />
+              </td>
+              {/* Confidence bar + number */}
+              <td className="px-8 py-6">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-1.5 w-20 rounded-full" />
+                  <Skeleton className="h-3 w-8" />
+                </div>
+              </td>
+              {/* Action button */}
+              <td className="px-8 py-6 flex justify-end">
+                <Skeleton className="h-3.5 w-20" />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 }
 
 export default function HistoryPage() {
@@ -49,9 +97,7 @@ export default function HistoryPage() {
 
         <div className="clinical-card overflow-hidden">
           {loading ? (
-            <div className="p-20 text-center text-slate-400 font-bold">
-               Syncing with Clinical Database...
-            </div>
+            <HistoryTableSkeleton />
           ) : records.length === 0 ? (
             <div className="p-20 text-center space-y-6">
                <p className="text-slate-400 font-medium text-lg">No records found in the database.</p>
