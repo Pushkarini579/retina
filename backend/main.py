@@ -3,9 +3,30 @@ from fastapi.middleware.cors import CORSMiddleware
 import ai_model
 import os
 
-os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+from pydantic import BaseModel
+from typing import List, Optional
+from dotenv import load_dotenv
+load_dotenv()
 
-app = FastAPI()
+class Observation(BaseModel):
+    label: str
+    value: str
+
+class AnalysisResponse(BaseModel):
+    filename: str
+    diagnosis: str
+    confidence: float
+    risk_level: str
+    heatmap: Optional[str] = None
+    observations: List[Observation]
+
+
+
+app = FastAPI(
+    title="Healthway Diagnostics - Neural Retina API",
+    version="1.0.0",
+    description="EfficientNet-B0 powered Diabetic Retinopathy detection with Grad-CAM explainability."
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -14,7 +35,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.post("/analyze")
+@app.post(
+    "/analyze",
+    summary="Analyze a retinal fundus image",
+    response_model=AnalysisResponse,
+    responses={
+        400: {"description": "Invalid or non-retinal image"},
+        500: {"description": "Model inference error"}
+    }
+)
 async def analyze_image(file: UploadFile = File(...)):
     image_bytes = await file.read()
     
