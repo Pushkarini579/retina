@@ -5,6 +5,8 @@ import os
 
 from pydantic import BaseModel
 from typing import List, Optional
+from dotenv import load_dotenv
+load_dotenv()
 
 class Observation(BaseModel):
     label: str
@@ -18,7 +20,7 @@ class AnalysisResponse(BaseModel):
     heatmap: Optional[str] = None
     observations: List[Observation]
 
-os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+
 
 app = FastAPI(
     title="Healthway Diagnostics - Neural Retina API",
