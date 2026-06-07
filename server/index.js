@@ -103,17 +103,8 @@ app.post('/api/analyze', upload.single('file'), async (req, res) => {
         res.json(newRecord);
 
     } catch (error) {
-        console.error("FINAL ERROR:", error.message);
-        
-        if (error.response) {
-            console.error("AI Service Error:", error.response.data);
-            return res.status(error.response.status).json(error.response.data);
-        }
-
-        res.status(500).json({ 
-            error: error.message,
-            detail: "Could not connect to AI Neural Engine"
-        });
+        next (error);
+         
     }
 });
 
@@ -123,7 +114,7 @@ app.get('/api/history', async (req, res) => {
         const history = await Analysis.find().sort({ createdAt: -1 });
         res.json(history);
     } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch history' });
+        next(error);
     }
 });
 
@@ -217,14 +208,15 @@ app.get('/api/report/:id', async (req, res) => {
         doc.end();
 
     } catch (error) {
-        console.error('PDF Generation Error:', error);
-        res.status(500).json({ error: 'Failed to generate PDF' });
-    }
+        next(error);
+    }s
 });
 
 // 4.AUTH ROUTE
 const authRoutes = require('./routes/auth');
+const errorMiddleware = require('./middleware/errorMiddleware');
 app.use('/api/auth', authRoutes);
 
 const PORT = process.env.PORT || 5000;
+app.use(errorMiddleware);
 app.listen(PORT, () => console.log(`🚀 Gateway Server running on port ${PORT}`));
