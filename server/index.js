@@ -128,8 +128,13 @@ app.get('/api/history', async (req, res) => {
 });
 
 // 3. PDF REPORT ROUTE
+const objectIdSchema = z.string().regex(/^[a-fA-F0-9]{24}$/, 'Invalid report ID');
 app.get('/api/report/:id', async (req, res) => {
     try {
+        const idResult = objectIdSchema.safeParse(req.params.id);
+        if (!idResult.success) {
+            return res.status(400).json({ error: 'Invalid report ID format' });
+        }
         const record = await Analysis.findById(req.params.id);
         if (!record) return res.status(404).json({ error: 'Report not found' });
 
