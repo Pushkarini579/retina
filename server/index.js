@@ -8,6 +8,8 @@ const FormData = require('form-data');
 const PDFDocument = require('pdfkit');
 const path = require('path');
 const fs = require('fs');
+const cron = require('node-cron');
+const cleanupOldUploads = require('./utils/cleanupUploads');
 require('dotenv').config();
 
 const Analysis = require('./models/Analysis');
@@ -19,6 +21,16 @@ const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir);
 }
+
+// Schedule automatic cleanup of files older than 24 hours
+// Runs every hour, on the hour
+cron.schedule('0 * * * *', () => {
+    console.log('🧹 Running scheduled uploads cleanup...');
+    cleanupOldUploads();
+});
+
+// Run once immediately on server start too
+cleanupOldUploads();
 
 // Storage Configuration
 const storage = multer.diskStorage({
