@@ -21,6 +21,7 @@ if (!fs.existsSync(uploadsDir)) {
 }
 
 // Storage Configuration
+
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, 'uploads/');
@@ -226,5 +227,41 @@ app.get('/api/report/:id', async (req, res) => {
 const authRoutes = require('./routes/auth');
 app.use('/api/auth', authRoutes);
 
+function cleanupOldUploads() {
+    const now = Date.now();
+    const maxAgeMs = 24 * 60 * 60 * 1000; // 24 hours
+
+    fs.readdir(uploadsDir, (err, files) => {
+        if (err) {
+            console.warn('⚠️ Upload cleanup: could not read uploads dir:', err.message);
+            return;
+        }
+
+        Promise.all(files.map(async (file) => {
+            const fullPath = path.join(uploadsDir, file);
+            try {
+                const stat = await fs.promises.stat(fullPath);
+                if (!stat.isFile()) return;
+
+                const ageMs = now - stat.mtimeMs;
+                if (ageMs > maxAgeMs) {
+                    await fs.promises.unlink(fullPath);
+                    console.log(`🧹 Upload cleanup: deleted ${file} (age ${(ageMs / 3600000).toFixed(2)}h)`);
+                }
+            } catch (e) {
+                console.warn('⚠️ Upload cleanup: failed for file', file, e.message);
+            }
+        })).catch(() => {});
+    });
+}
+
+// Run once at startup
+cleanupOldUploads();
+
+// Schedule cleanup every 15 minutes
+const CLEANUP_INTERVAL_MS = Number(process.env.UPLOAD_CLEANUP_INTERVAL_MS) || 15 * 60 * 1000;
+setInterval(cleanupOldUploads, CLEANUP_INTERVAL_MS);
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Gateway Server running on port ${PORT}`));
+
