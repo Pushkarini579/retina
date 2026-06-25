@@ -151,7 +151,6 @@ Healthway-Diagnostics/
 └── LICENSE
 ```
 
-> Update this structure if the repository contains additional folders.
 
 ---
 
