@@ -18,7 +18,7 @@ Healthway Diagnostics is a professional-grade clinical platform that leverages d
 * Deployment
 * Contributing
 * Disclaimer
-
+* License
 
 ---
 
