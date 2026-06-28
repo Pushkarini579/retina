@@ -330,7 +330,7 @@ Submit a PR with a clear description of your changes.
 
 ## ⚠️ Disclaimer
 
-**This software is intended for educational and research purposes only.**
+
 
 It is **not a certified medical device** and should not be used as a replacement for professional medical diagnosis.
 
