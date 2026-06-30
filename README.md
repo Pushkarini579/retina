@@ -84,23 +84,7 @@ Performs biological texture validation to prevent non-retinal image uploads.
 
 > Replace the placeholder images below with actual screenshots from the application.
 
-### Dashboard
 
-![Dashboard](docs/images/dashboard.png)
-
-### Retina Scan Upload
-
-![Upload](docs/images/upload.png)
-
-### Diagnostic Results
-
-![Results](docs/images/result.png)
-
-### PDF Diagnostic Report
-
-![Report](docs/images/report.png)
-
----
 
 ## 🔄 System Workflow
 
