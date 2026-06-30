@@ -80,9 +80,6 @@ Performs biological texture validation to prevent non-retinal image uploads.
 
 ---
 
-## 📸 Application Screenshots
-
-> Replace the placeholder images below with actual screenshots from the application.
 
 
 
