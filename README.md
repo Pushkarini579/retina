@@ -82,7 +82,6 @@ Performs biological texture validation to prevent non-retinal image uploads.
 
 
 
-
 ## 🔄 System Workflow
 
 ```mermaid
