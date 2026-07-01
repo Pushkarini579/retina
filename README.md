@@ -4,6 +4,7 @@
 
 Healthway Diagnostics is a professional-grade clinical platform that leverages deep learning to detect **Diabetic Retinopathy (DR)** from fundus photography (retina scans). Using an **EfficientNet-B0** neural engine, it provides instant diagnostic classification and visual Grad-CAM heatmaps to assist medical professionals.
 
+
 ---
 
 ## 📖 Table of Contents
