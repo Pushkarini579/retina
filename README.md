@@ -79,4 +79,4 @@ This project is pre-configured for deployment on **Vercel** (Frontend) and **Ren
 ---
 
 ## 📄 License
-Distributed under the ISC License. See `LICENSE` for more information.
+Distributed under the ISC License. See the [LICENSE](LICENSE) file for more information.
